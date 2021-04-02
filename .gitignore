@@ -1,6 +1,7 @@
 # docker-in-docker
 .docker
-docker-compose.yml
+docker-compose.
+Dockerfile
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -50,6 +51,8 @@ coverage.xml
 
 # Django stuff:
 *.log
+db.sqlite3
+sqlite3
 
 # Sphinx documentation
 docs/_build/

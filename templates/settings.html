@@ -1,0 +1,12 @@
+{% extends '_base.html' %}
+
+{% block content %}
+    <div class="container">
+        <h2>Forgot password?</h2>
+        <a href="{% url 'account_reset_password' %}">Generate new password</a>
+    </div>
+    <div class="container">
+        <h2>Change password</h2>
+        <a href="{% url 'account_change_password' %}">Create new password</a>
+    </div>
+{% endblock content %}

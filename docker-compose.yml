@@ -1,0 +1,25 @@
+
+
+version: '3.8'
+services:
+  web:
+    build: .
+    command: python /code/manage.py runserver 0.0.0.0:8000
+    environment:
+      - SECRET_KEY=5&qieg)v%edw0-hnlh_%s3q#81+huf)+=t4$gh2qmy4k878(ot
+      - SENDGRID_API_KEY=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
+      - DEBUG=1
+    volumes:
+    - .:/code
+    ports: 
+    - 8000:8000
+    depends_on:
+      - db
+  db:
+    image: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+volumes:
+  postgres_data:
+
+

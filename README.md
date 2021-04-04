@@ -278,3 +278,36 @@ According to Vincent:
 ### Navigating around django-allauth documentation
 
 ## Chapter 10: Books App
+
+`__str__` method helps to control how the object is outputted in the Admin and Django shell
+
+`get_absolute_url` method: According to Williams, there’s no need to use the url template tag either, just one canonical reference that can be changed, if needed, in the `books/models.py` file and will propagate throughout the project from there. This is a cleaner approach and should be used whenever you need individual pages for an object.
+
+### Difference between Primary Key and IDs
+
+Django's `DetailView` treats Primary Key and IDs interchangeably, however, there is differerece.
+
+    - pk is the attribute that contains the values of the primary key for the model
+    - id is the name of the field created as a primary key by default if none is explicitly specified
+
+### Slugs vs. UUIDs
+
+`Slugs`: A short labele for something. This where titles can be coverted into space-separated sentences. Eg; a new article could be converted to `a-new-article`. The downside of this approach is how to handle duplicates. Though random strings or numbers can be added, it still remains a challenge when it comes to sychronization
+
+`UUIDs` (Universally Unique IDentifier): Helps in generating random objects of 128 bits as IDs. 
+    - For encryption purpose, `uuid4` is used
+
+### Fix issue for: django.db.utils.OperationalError: FATAL:  password authentication failed for user "postgres"
+
+Go the `cli` of the postgres db on docker and type:
+
+    docker exec -it Your_Container_Name rengine_db_1 /bin/bash
+    su - postgres
+    psql
+    ALTER USER postgres WITH PASSWORD 'postgres';
+
+
+### Tests for books
+We import `TestCase` and `Client()`
+    - Client is imported as a dummy web browser for simulating `GET` and `POST` requests
+    - When testing  `views` always use `Client` module/library

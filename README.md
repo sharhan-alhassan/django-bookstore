@@ -311,3 +311,6 @@ Go the `cli` of the postgres db on docker and type:
 We import `TestCase` and `Client()`
     - Client is imported as a dummy web browser for simulating `GET` and `POST` requests
     - When testing  `views` always use `Client` module/library
+
+
+## Chapter 11: Reviews App and Foreign keys

@@ -9,4 +9,14 @@
         <p>Author: {{ book.author }}</p>
         <p>Price: {{ book.price }}</p>
     </div>
+
+    <div class="card" style="width: 18rem;">
+        <div class="card-body">
+            {% for review in book.reviews.all %}
+          <h5 class="card-title">Review</h5>
+          <h6 class="card-subtitle mb-2 text-muted">Author: {{ review.author }}</h6>
+          <p class="card-text">{{ review.review }}</p>
+            {% endfor %}
+        </div>
+    </div>
 {% endblock content %}  

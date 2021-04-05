@@ -314,3 +314,39 @@ We import `TestCase` and `Client()`
 
 
 ## Chapter 11: Reviews App and Foreign keys
+
+
+## Chapter 12: File/Image Uploads
+
+    1. static: Django refers to this name for any static file that is prepopulated in css, js, or images
+    2. media: Django refers to anything that is being uploaded by the user as `media`
+NB: Fundamentally, we can always trust `static` files and not `media` files because the former is provided by us and the later is provided by an outsider
+
+`pillow`: This is an image processing library that supports uplaod of images and other features such as basic validation.
+
+Process of installation
+1. docker-compose exec web pipenv install pillow==8.2.0
+2. docker-compose down
+3. docker-compose up -d --build
+
+Move to `settings.py` for the configuration
+
+    MEDIA_ROOT: is the absolute file system path to the directory for user uploaded files.
+    Configuration: 
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+    MEDIA_URL: is the URL we can use in our templates for the files
+    configuration: 
+    MEDIA_URL = '/media/'
+
+NB: Since user-uploaded content is assumed to exist in a production context, to see media items locally we to update out `bookstore_project/urls.py` to show the files locally. This means we will import both `settings` and `static` at the top and then adding an additional at the bottom
+
+To update the template to display the book cover, you need a url route. The route will be:
+    - `book.cover.url`  //object name, field name, url
+
+If you added a cover photo for one booka and didn't do that for the other books, they'll throw an error when you try to open them because they do not have cover photos. The way out is to put a simple `if statement` before the image tag in the `book_detail.html` which is 
+    - {% if book.cover%}...{% endif %}
+
+
+## Chapter 13: Permissions
+

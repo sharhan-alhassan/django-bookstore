@@ -19,7 +19,7 @@ class BookTests(TestCase):
             author = 'JK Rowling',
             price = 25.99,
         )
-        self.review = Review.ojbects.create(
+        self.review = Review.objects.create(
             book = self.book,
             author = self.user,
             review = 'An excellent review',

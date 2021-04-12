@@ -350,3 +350,99 @@ If you added a cover photo for one booka and didn't do that for the other books,
 
 ## Chapter 13: Permissions
 
+Django comes with `built-in authorization options` for locking down pages to either logged in users, specific groups, or users with the proper individual permissions
+
+### Logged-In Users Only
+Two ways of restricing permissions to logged-in users are:
+    1. `login_required()`: decorator
+    2. `LoginRequired mixin`: for class-based views
+
+Practice: Let's try to add restriction to the books page for only those logged in
+- First import `LoginRequiredMix` at the top and then add it before `ListView` since mixins are loaded from left-to-right
+- Set a `login_url` for the user to be redirected to
+- Since we're using `django-allauth` app, the URL will be `account_login`. For raw django authentication system, we'll just use `login`
+
+### Custom Permissions
+Custom permissions can be set via the `Meta` class on our database models. 
+
+*PermissionRequiredMixin*: To limit some permissions that the user can do, like ability to view certain books or all books. page: **256**
+In other words they have access to the `DetailView`. We will add this `custom permission` to new user we will create called `specialuser`
+- Addition of Meta to book model in `book/models.py`
+    class Meta:
+        permissions = [
+            ('special_status', 'can read all books')
+        ]
+- make new migrations for `book`
+- go to the admin site and add `book | book| can read all books` permission to out `specialuser`
+
+- Next is to use `PermissionRequiredMixin`. Import it and add it to the `DetailView` after `LoginRequiredMixin` but before `DetailView`. This order logically makes sense
+
+- Finally add a `permission_required` field which specifies the desired perimission. In our case its name is `special_status` and it exists on the `books` model 
+
+
+## Chapter 14: Orders with Stripe 
+
+Two main offerings from `Stripe` are:
+    1. `Checkout`: which allows for the use of pre-built forms from Stripe
+    2. `Connect`: which is used for a marketplace with multiple buyers and sellers.
+
+For example if we added book
+authors as users and wanted to process payments on their behalf, taking a commission for ourselves on the Bookstore website, then we would use `Connect`. However, in this project, since we are just processing payments we will use `Checkout`
+
+There are now two `Checkout options` available to developers
+    1. `Client Integration`: where the payment form is hosted on Stripe itself
+    2. `Server Integration`: where we host the form ourselves. For the purpose of this project using Django, we will opt for option 2, *Server Integration* approach. 
+
+According to Vincent, the second major change is a new API that relies on `Sessions`. It is currently not fully implemented and poorly documented. I have personally not explored it yet. 
+
+### Payments Flow
+- There is book page(book_list) for all books
+- There is book detail page(book_detail) for each book
+NB: We added a permission for a user to have access to all books. Ultimately when an order is successfully completed, that user needs to have this permission flag flipped in the database. That's the main goal 
+
+### Installing Stripe
+    - docker-compose exec web pipenv install stripe==2.56.0
+    - docker-compose down
+    - docker-compose up -d --build
+
+Go to the Stripe website and register an account in order to generate the API keys.
+
+Each Stripe account has 4 API keys
+    - 2 for testing
+    - 2 for Live use in production
+
+There are two types of keys:
+    1. `publishable key`: which will be embedded in the Javascript on your website
+    2. `secret key`: which is stored on the server and for private use only
+
+After this settings configuration, move to add the stripe checkout form to the `orders/purchase.html` template
+
+We can test payments with several `test card numbers` provided by stripe. You can find them here:
+    [Stripe Test Card Numbers](https://stripe.com/docs/testing#cards)
+
+NB: Don't forget to overide/edit `get_context_data()` in `orders/views.py` to add the stripe publishable key from `settings.py`
+
+On Stripe dashboard, if you then click on “Payments” in the same lefthand menu, there are no charges.
+So what’s happening?
+*Think back to the Stripe flow. We have used the publishable key to send the credit card information to Stripe, and Stripe has sent us back a `unique token` for the order.*
+*But we haven’t used that token yet to make a charge! Recall that we send an order form to Stripe with the Publishable Key, Stripe validates it and sends back a token, and then we process the charge using both the `token` and our own `Secret Key`*
+
+### Stripe + Permissions and 
+This step involves that, when we implement the full payment by using stripe token and our secret key, we change the permission of the user by giving them access to the `DetailView`.
+This is done in the `orders/views.py`
+    1. We create the permission: `permission = Permission.objects.get(codename='special_status')`
+    2. Get the user: `user = request.user`
+    2. Add the permission to the user:
+        `user.user_permission.add(permission)`
+    3. Perform POST request/response with function view and render `orders/charge.html` template
+
+
+### Tests
+*NB: Cypress for testing payments*
+
+
+
+
+### Issues identified
+1. Sign up form with only one password field instead of two
+2. Chapter 13 Permissions(page 255): After creating the custom permission, he added it to the user from the admin dashboard. This doesn't work properly. It only works if you don't add from the admin but rather leave it and after the payment authentication with stripe token and your secret key, the permission is added automatically when you have access to the detail_list. If you check back in the admin dashboard, the permission will be automatically adde. 

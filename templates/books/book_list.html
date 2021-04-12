@@ -4,6 +4,11 @@
 {% block title %}Books{% endblock title %}
 
 {% block content %}
+
+{% if not perms.book.special_status %}
+<a href="{% url 'orders' %}" class="btn btn-success btn-lg">Purchase all books</a>
+{% endif %}
+
     {% for book in book_list %}
         <div class="container">
             <h2><a href="{{ book.get_absolute_url }}">{{ book.title }}</a></h2>

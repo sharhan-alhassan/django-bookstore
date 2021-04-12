@@ -33,6 +33,7 @@ urlpatterns = [
     #Local apps
     path('', include('pages.urls')),
     path('books/', include('book.urls')),
+    path('orders/', include('orders.urls')),
     
     # Delete users.urls and instead use django-allauth
     # path('accounts/', include('users.urls')),  

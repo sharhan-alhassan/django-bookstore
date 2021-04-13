@@ -516,6 +516,13 @@ The magic starts here:
     - Take the user's search query, represented by `q` in the URL and pass it to the actual search filters. (We remove the hardcoded queryset from *SearchResultsListView*)
     - we also updated the query to perfom on either `title` or `author`
 
+### Resources for Search functionality
+There are some third-party packages that can help in advanced search. Some are:
+    1. [django-watson](https://pypi.org/project/django-watson/)
+    2. [django-haystack](https://pypi.org/project/django-haystack/)
+    3. Using PostgreSQL [full text search](https://docs.djangoproject.com/en/3.1/ref/contrib/postgres/search/)
+    4. Enterprise-level like [ElasticSearch](https://www.elastic.co/)
+
 
 ### Issues identified
 1. Sign up form with only one password field instead of two

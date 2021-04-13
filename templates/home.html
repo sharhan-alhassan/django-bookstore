@@ -9,6 +9,9 @@
     <img class="me" src="{% static 'images/me.jpg' %}" alt="profile photo">
     {% if user.is_authenticated %}
         <h3>Hi {{ user.email }}</h3>
+        <form class="form-inline mt-2 mt-md-0" action="{% url 'search_results' %}" method="get">
+            <input type="text" name="q" class="form-control mr-sm-2" placeholder="Search" aria-label="Search">
+        </form>
         <a href="{% url 'account_logout' %}">Log Out</a>
     {% else %}
         <p>You are not logged in</p>

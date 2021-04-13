@@ -440,7 +440,81 @@ This is done in the `orders/views.py`
 ### Tests
 *NB: Cypress for testing payments*
 
+## Chapter 15: Search
+We will implement basic search with `forms` and `filters` then we improve on it with additional `logic` and toucn upon ways to go even more deeply with search options in Django. 
 
+Search functionality consists of two parts:
+    1. A form to pass along a user search query
+    2. A results page that performs a filter based on that query. 
+NB: Determining `the right` type of filter is where things getty interesting and problematic. 
+Let's start with part 2: Search results page before the form
+
+### Search Results Page
+- create a search url in `books/urls.py` with path `search`
+- create `SearchResultsListView` view and template `books/search_results.html`
+- list the books and their content in the template
+
+Next is how to create a `basic filtering`
+
+### Basic Filtering
+According to Vincent, `QuerySet` is what is used in filtering results from a database model in Django. 
+They are multiple ways to customize a queryset including:
+    1. via a `manager` on the model itself 
+    2. or just keeping this simple with one line. 
+
+Let's start with the latter:
+We can override the `queryset` attribute on `ListView` whick by default `shows all results`. The queryset documentation sometimes use `contains` which is case sensitive or `icontains` which is not case sensitive.
+
+Let's do the filter based on the `title` that contains the name `tutorial`
+Your code should look like this:
+    class SearchResultsListView(ListView):
+        model = Book
+        context_object_name = 'book_list'
+        template_name = 'books/search_results.html'
+        queryset = Book.objects.filter(title__icontains='tutorial')
+
+For basic filtering, most of the time the [built-in queryset methods](https://docs.djangoproject.com/en/3.1/topics/db/queries/#other-queryset-methods) to use are:
+    1. filter()
+    2. all()
+    3. get() or 
+    4. exclude()
+
+However, there is a robust [QuerySet API](https://docs.djangoproject.com/en/3.1/ref/models/querysets/#queryset-api) for doing filtering.
+
+### Q Objects
+The normal `filter()` methods are good but sometimes you would want to perform complext queries such as `OR` and not just only `AND`. This is where `Q objects` are powerful.
+The process goes this way if we want to query either `tutorial` or `professionals`:
+    1. Import Q at the top of the file
+    2. Use `|` symbol which represents an `OR` operator
+    NB: Filtering can be done accross different fields such as author, price and not just only title
+    3. As the number of filters grow it can be helpful to separate out the `queryset` override via `get_queryset()`
+
+Our new `SearchResultsListView` now looks like this:
+    class SearchResultsListView(ListView):
+        model = Book
+        context_object_name = 'book_list'
+        template_name = 'books/search_results.html'
+
+        def get_queryset(self):
+            return Book.objects.filter(
+                Q(title__icontains='tutorial') | Q(title__icontains='professionals')
+            )
+
+Part 2: The query Form for the client/user
+- Formm sending data usually is one of the two, `GET` or `POST`.
+- If form is not changing the state of the applicaton like creating, deleting, updating anything from the database, then GET will be fine. Search with `GET` will be fine because we are not chaning anything from the database but rather we basically filter list view
+
+- NB: HTML form always has an `action`: This is where it redirect the user after the form is submitted. This will be our `search_results` page.
+
+- The form `input` contains the actual user search query. We provide it with a variable named `q` which will later be visible in the URL and also available in the views file
+- We add Bootstrap styling to the `class`
+- Specify the `type` of input which is `text`
+- We add a `Placeholder` which is the default text that prompts the user. 
+- `Aria-label`: is the name provided to `screen reader` users. 
+
+The magic starts here:
+    - Take the user's search query, represented by `q` in the URL and pass it to the actual search filters. (We remove the hardcoded queryset from *SearchResultsListView*)
+    - we also updated the query to perfom on either `title` or `author`
 
 
 ### Issues identified

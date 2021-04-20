@@ -1,6 +1,7 @@
 # docker-in-docker
 .docker
 docker-compose.yml
+docker-compose-prod.yml
 Dockerfile
 .dockerignore
 

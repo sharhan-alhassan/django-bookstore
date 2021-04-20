@@ -518,12 +518,135 @@ The magic starts here:
 
 ### Resources for Search functionality
 There are some third-party packages that can help in advanced search. Some are:
+    
     1. [django-watson](https://pypi.org/project/django-watson/)
     2. [django-haystack](https://pypi.org/project/django-haystack/)
     3. Using PostgreSQL [full text search](https://docs.djangoproject.com/en/3.1/ref/contrib/postgres/search/)
     4. Enterprise-level like [ElasticSearch](https://www.elastic.co/)
 
 
+## Chapter 16: Performance 
+Generally performance boils down to 4 major areas
+1. Optimizing database queries
+2. Caching 
+3. Indexes
+4. Compressing front-end assets like images, Javascript, and CSS
+
+### 1. Optimizing Database Queries
+### django-bebug-toolbar
+Before you can optimize our database queries we need to see them. [django-debug-toolbar]() is a third-party tool that helps in that regards. It also comes with a configurable set of panels to inspect the complete request/response cycle of any given page. 
+Installation process:
+
+    - docker-compose exec web pipenv install django-debug-toobar==
+    - docker-compose down
+    - move to settings for further configurations in the following:
+        1. INSTALLED_APPS
+        2. Middleware
+        3. INTERNAL_IPS
+    - docker-compose up -d --build
+
+The last part, INTERNAL_IPS: 
+If we were not in Docker, we would just set out IP to localhost or `127.0.0.1`. However, since we are using docker we need a bit of configuration. 
+
+    import socket
+    hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
+    INTERNAL_IPS = [ip[:-1] + "1" for ip in ips]
+
+Basically, the above code ensures that our `INTERNAL_IPS` matches that of our `Docker host`
+
+The last step is to include the debug too in our URFconfig which when we set our `DEBUG=True` to show the tool. We do this in `bookstore_project/urls.py`. The following code is used:
+
+### select_related and prefetch_related
+Rule of thumb: *Fewer large queries are faster than many smaller queries*.
+The two common techniques are 
+`select_related()`: This is used for single-value relationships through a forward one-to-many or one-to-one relationship
+and 
+`prefetche_realted()`: This technique is used for a set or list of objects like many-to-many or many-to-one relationship. 
+   
+*NB: Futher look up for the above techniques required*
+
+### 2. Caching
+You really don't want queries to be made all over again anytime a user request for it. You would want to cache data the first time a user requests for them and keep it for the next request. This is faster and improves performance. 
+Caching is an `in-memory` storing of an expensive calculation. 
+- The two most popular caching options are:
+1. `Memcached`: which features native Django support
+2. `Redis`: which is commonly implemented with the [django-redis](https://github.com/jazzband/django-redis) third-party package
+Caching this project will be an overkill, however, we implement a simple caching technique
+
+On the other hand, Django has its own [cache framework](https://docs.djangoproject.com/en/3.1/topics/cache/) which includes 4 differenct caching options in descending order of granularity
+
+    1. The per-site cache is the simplest to set up and caches your entire site
+    2. The per-view cache lets you cache individual views
+    3. Template fragment caching: lets you specify a specific section of a template to cache
+    4. The low-level cache API lets you manually set, retrieve, and maintain specific objects in the cache
+
+### Implementation of per-site cache
+- Add `UpdateCacheMiddleware` at the very top of `MIDDLEWARE` configuration `bookstore_project/settings.py`
+- Add `FetchFromCacheMiddleware` at the very bottom
+- Also set the following:
+    1. CACHE_MIDDLEWARE_ALIAS = `'default'`
+    2. CACHE_MIDDLEWARE_SECONDS = `604800`
+    3. CACHE_MIDDLEWARE_KEY_PREFIX = `''`
+
+Note: The only thing here you probably would want to adjust is `CACHE_MIDDLEWARE_SECONDS` which has a default number of `(600) seconds` to cache a page. After the period is up, the cache expires and becomes empty. A good default starting point is *604800* seconds or *1 week (60secs x 60minutes x 168hours)* for a site with content that doesn't change much
+
+*NB: This part was not actually implemented in this project*
+### 3. Indexes
+
+Indexing is a common technique for speeding up database performance. It is a separate data structure that allows faster searches and is typically only applied to the primary key in a model. The downside is that indexes require additional space on a disk so they must be used with care.
+
+    A general rule of thumb is that if a given field is being used frequently, such as 10-25% of all queries, it is a prime candidate to be indexed.
+
+The indexing is usually done in the `Meta class` of the model:
+
+    class Book(models.Model):
+    ...
+        clas Meta:
+            indexes = [
+                models.Index(field=['id], name='id_index'),
+            ]
+
+
+## Chapter 17: Security
+According to William, the biggest risk to any website is ultimately not technical: it is people. This is where `Social Engineering` comes in. It is the psychological manipulation of people into performing actions or divulging confidential informtion(wikipedia). It could be sending malicious mails that people will click and that would compromise and lead to infiltration to their systems. It could also be getting people to willingly or unwillingly share confidential details like login credentials only to be picked my bad actors
+`Phishing`: It is the fraudulent attempt to obtain sensitve information or data, such as usernames, passwords, credit card numbers or other sensitive information by impersonating oneself as a trustworthy entity in a digital communication(wikipedia)
+
+### Django updates
+Django project can be updated for each new release by typing `python -Wa manage.py test`
+
+### Deployment Checklist
+There is a command that automate the process of checking whether a project is ready for deployment and passed the deployemnt checklist:
+
+    python manage.py check --deploy
+
+This command uses the Django system check framework which can be used to customize similar commands in mature projects. 
+
+- Create `touch dockker-compose-prod.yml`
+- Remove all `volumes`: The volumes serve to persist information locally within the Docker containers but are not needed in production
+- set `DEBUG=0` or `DEBUG=False`
+- ALLOWED_HOSTS = [`.herokuapp.com`, `localhost`, `127.0.0.1`] We're using Herokuapp for the deployment 
+
+### Recreating 
+- spin down the Docker and recreate things with `-f` flag to create alternate compose file
+
+    - docker-compose down
+    - docker-compose -f docker-compose-prod.yml up -d --build
+    - docker-compose exec web python manage.py migrate
+
+The `--build` flag is addded to recreate everything from scratch, so thereby loosing superuse and database. Everything can be recreated on production. 
+
+### Hardening the Admin
+It's clear that the path to the admin page is `admin/`. This popularly known so change it to something, say `dada-admin/` or any name you want to. 
+
+A third-party too for this purpose `django-admin-honeypot` or even generating a fake admin login in screen and email site admins the IP address of anyone trying to attack your site at `admin/`
+
+
+
+
+
 ### Issues identified
 1. Sign up form with only one password field instead of two
 2. Chapter 13 Permissions(page 255): After creating the custom permission, he added it to the user from the admin dashboard. This doesn't work properly. It only works if you don't add from the admin but rather leave it and after the payment authentication with stripe token and your secret key, the permission is added automatically when you have access to the detail_list. If you check back in the admin dashboard, the permission will be automatically adde. 
+3. He made a mistake in `chapter 17 - security`. Instead of setting the evironment to 'production', he set it to 'development'
+4. He didn't talked about setting `environment` of `db` to `POSTGRES_HOST_AUTH_METHOD=trust`
+
